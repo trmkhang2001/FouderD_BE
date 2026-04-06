@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  SALE
+}
+
+enum ReportPeriod {
+  DAILY
+  WEEKLY
+}
+
+enum LeadPipelineStage {
+  NEW
+  CONTACTED
+  PERSUADING
+  PAYMENT_SUCCESS
+  ZALO_JOINED
+  REFUND
+}
+
+enum VerificationStatus {
+  AUTO
+  MANUAL
+  PENDING
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String
+  name             String
+  role             Role     @default(SALE)
+  saleAccId        String?  @map("sale_acc_id")
+  tokenVersion     Int      @default(0) @map("token_version")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  assignedLeads Lead[]       @relation("SaleLeads")
+  dailyReports  DailyReport[]
+  externalPipelineSnapshots ExternalPipelineSnapshot[]
+
+  @@map("users")
+}
+
+model Lead {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  source    String?  @map("source")
+  tag       String?
+  status    String?
+  saleId    String?  @map("sale_id")
+  pipelineStage LeadPipelineStage @default(NEW) @map("pipeline_stage")
+  dealAmount    Decimal? @map("deal_amount") @db.Decimal(14, 2)
+  lastActivityAt DateTime @default(now()) @map("last_activity_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sale          User?         @relation("SaleLeads", fields: [saleId], references: [id], onDelete: SetNull)
+  transactions  Transaction[]
+
+  @@index([saleId])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model Transaction {
+  id             String   @id @default(uuid())
+  transactionId String   @unique @map("transaction_id")
+  amount         Decimal  @db.Decimal(14, 2)
+  content        String?
+  transactionDate DateTime @map("transaction_date")
+  phoneSender    String?  @map("phone_sender")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  isVerified     Boolean  @default(false) @map("is_verified")
+  leadId         String?  @map("lead_id")
+  // Optional duplication of phone extracted from webhook; kept for debugging/reconciliation UI.
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([phoneSender])
+  @@index([transactionDate])
+  @@map("transactions")
+}
+
+model DailyReport {
+  id                 String       @id @default(uuid())
+  saleId             String       @map("sale_id")
+  date               DateTime     @db.Date
+  period             ReportPeriod @default(DAILY)
+  totalLeadsReceived Int          @default(0) @map("total_leads_received")
+  totalContacted     Int          @default(0) @map("total_contacted")
+  totalClosed97k     Int          @default(0) @map("total_closed_97k")
+  totalDepositYmm    Decimal      @default(0) @map("total_deposit_ymm") @db.Decimal(14, 2)
+  totalZaloJoined    Int          @default(0) @map("total_zalo_joined")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  sale User @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@unique([saleId, date, period])
+  @@map("daily_reports")
+}
+
+model ExternalPipelineSnapshot {
+  id String @id @default(uuid())
+  saleId String @map("sale_id")
+  source String @default("LADIPAGE") @map("source")
+  date DateTime @db.Date
+  payload Json @map("payload_json")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sale User @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@unique([saleId, source, date])
+  @@map("external_pipeline_snapshots")
+}
+
+model ReportBatch {
+  id String @id @default(uuid())
+  name String
+  startDate DateTime @map("start_date") @db.Date
+  endDate DateTime @map("end_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  batchMarketingCostSnapshots BatchMarketingCostSnapshot[]
+
+  @@map("report_batches")
+}
+
+model BatchMarketingCostSnapshot {
+  id String @id @default(uuid())
+  batchId String @map("batch_id")
+  source String @default("MARKETING_COSTS") @map("source")
+  payload Json @map("payload_json")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  batch ReportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, source])
+  @@map("batch_marketing_cost_snapshots")
+}
