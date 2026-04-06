@@ -61,7 +61,10 @@ export declare class UsersRepository {
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     update(id: string, data: {
         role: Role;
-        saleAccId?: string | null;
+        email: string;
+        name: string;
+        saleAccId: string | null;
+        password?: string;
     }): import("@prisma/client").Prisma.Prisma__UserClient<{
         id: string;
         email: string;
@@ -72,6 +75,17 @@ export declare class UsersRepository {
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     incrementTokenVersion(userId: string): import("@prisma/client").Prisma.Prisma__UserClient<{
+        id: string;
+        email: string;
+        password: string;
+        name: string;
+        role: import("@prisma/client").$Enums.Role;
+        saleAccId: string | null;
+        tokenVersion: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }, never, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    deleteById(id: string): import("@prisma/client").Prisma.Prisma__UserClient<{
         id: string;
         email: string;
         password: string;

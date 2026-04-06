@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -17,6 +18,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { JwtUserPayload } from '../auth/types/jwt-user.payload';
 
 @Controller('users')
 @ApiTags('users')
@@ -48,5 +51,11 @@ export class UsersController {
   @UsePipes(new ZodValidationPipe(UpdateUserDto))
   update(@Param('id') id: string, @Body() body: UpdateUserDto) {
     return this.users.update(id, body);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  remove(@Param('id') id: string, @CurrentUser() user: JwtUserPayload) {
+    return this.users.remove(id, user.sub);
   }
 }

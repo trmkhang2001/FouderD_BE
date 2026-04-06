@@ -101,4 +101,10 @@ export class UsersRepository {
       data: { tokenVersion: { increment: 1 } },
     });
   }
+
+  deleteById(id: string) {
+    return this.prisma.user.delete({
+      where: { id },
+    });
+  }
 }

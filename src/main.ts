@@ -1,14 +1,41 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
+import { json, urlencoded, type Request, type Response, type NextFunction } from 'express';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+/** Khi client gửi nhầm body dạng JSON string (hoặc double-stringify), express.json() parse ra string → Zod báo expected object. */
+function coerceStringJsonBody(req: Request, _res: Response, next: NextFunction) {
+  const b = req.body;
+  if (b != null && typeof b === 'string') {
+    try {
+      let parsed: unknown = JSON.parse(b);
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed)
+      ) {
+        req.body = parsed;
+      }
+    } catch {
+      /* giữ nguyên */
+    }
+  }
+  next();
+}
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
   const config = app.get(ConfigService);
-  app.setGlobalPrefix('api');
   app.use(cookieParser());
+  app.use(json({ limit: '2mb' }));
+  app.use(urlencoded({ extended: true, limit: '2mb' }));
+  app.use(coerceStringJsonBody);
+  app.setGlobalPrefix('api');
   app.enableCors({
     origin: config.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:3000',
     credentials: true,

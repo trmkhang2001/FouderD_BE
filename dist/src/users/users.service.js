@@ -87,10 +87,46 @@ let UsersService = class UsersService {
         if (!existing) {
             throw new common_1.NotFoundException();
         }
+        let saleAccId = existing.saleAccId;
+        if (existing.saleAccId) {
+            if (input.saleAccId !== undefined &&
+                input.saleAccId !== null &&
+                input.saleAccId !== existing.saleAccId) {
+                throw new common_1.BadRequestException('Sale ACC ID đã được gán, không thể thay đổi.');
+            }
+        }
+        else {
+            saleAccId = input.saleAccId ?? null;
+        }
+        if (input.email !== existing.email) {
+            const taken = await this.users.findByEmail(input.email);
+            if (taken && taken.id !== id) {
+                throw new common_1.ConflictException('Email already registered');
+            }
+        }
+        const passwordPlain = input.password?.trim();
+        let passwordHash;
+        if (passwordPlain) {
+            passwordHash = await bcrypt.hash(passwordPlain, 12);
+        }
         return this.users.update(id, {
             role: input.role,
-            saleAccId: input.saleAccId ?? null,
+            email: input.email,
+            name: input.name,
+            saleAccId,
+            ...(passwordHash && { password: passwordHash }),
         });
+    }
+    async remove(id, requesterId) {
+        if (id === requesterId) {
+            throw new common_1.BadRequestException('Không thể xóa chính tài khoản đang đăng nhập.');
+        }
+        const existing = await this.users.findById(id);
+        if (!existing) {
+            throw new common_1.NotFoundException();
+        }
+        await this.users.deleteById(id);
+        return { ok: true };
     }
 };
 exports.UsersService = UsersService;

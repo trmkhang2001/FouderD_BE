@@ -1,6 +1,7 @@
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
+import type { JwtUserPayload } from '../auth/types/jwt-user.payload';
 export declare class UsersController {
     private readonly users;
     constructor(users: UsersService);
@@ -37,5 +38,8 @@ export declare class UsersController {
         saleAccId: string | null;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    remove(id: string, user: JwtUserPayload): Promise<{
+        ok: true;
     }>;
 }

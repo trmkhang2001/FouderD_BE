@@ -5,6 +5,9 @@ export declare const UpdateUserSchema: z.ZodObject<{
         MANAGER: "MANAGER";
         SALE: "SALE";
     }>;
+    email: z.ZodString;
+    name: z.ZodString;
+    password: z.ZodOptional<z.ZodString>;
     saleAccId: z.ZodNullable<z.ZodOptional<z.ZodString>>;
 }, z.core.$strip>;
 declare const UpdateUserDto_base: import("nestjs-zod").ZodDto<z.ZodObject<{
@@ -13,6 +16,9 @@ declare const UpdateUserDto_base: import("nestjs-zod").ZodDto<z.ZodObject<{
         MANAGER: "MANAGER";
         SALE: "SALE";
     }>;
+    email: z.ZodString;
+    name: z.ZodString;
+    password: z.ZodOptional<z.ZodString>;
     saleAccId: z.ZodNullable<z.ZodOptional<z.ZodString>>;
 }, z.core.$strip>, false>;
 export declare class UpdateUserDto extends UpdateUserDto_base {

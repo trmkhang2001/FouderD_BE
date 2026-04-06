@@ -90,4 +90,16 @@ export class UsersService {
       ...(passwordHash && { password: passwordHash }),
     });
   }
+
+  async remove(id: string, requesterId: string) {
+    if (id === requesterId) {
+      throw new BadRequestException('Không thể xóa chính tài khoản đang đăng nhập.');
+    }
+    const existing = await this.users.findById(id);
+    if (!existing) {
+      throw new NotFoundException();
+    }
+    await this.users.deleteById(id);
+    return { ok: true as const };
+  }
 }

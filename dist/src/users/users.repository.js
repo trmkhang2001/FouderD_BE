@@ -64,7 +64,15 @@ let UsersRepository = class UsersRepository {
             where: { id },
             data: {
                 role: data.role,
-                saleAccId: data.saleAccId ?? null,
+                email: data.email,
+                name: data.name,
+                saleAccId: data.saleAccId,
+                ...(data.password
+                    ? {
+                        password: data.password,
+                        tokenVersion: { increment: 1 },
+                    }
+                    : {}),
             },
             select: {
                 id: true,
@@ -81,6 +89,11 @@ let UsersRepository = class UsersRepository {
         return this.prisma.user.update({
             where: { id: userId },
             data: { tokenVersion: { increment: 1 } },
+        });
+    }
+    deleteById(id) {
+        return this.prisma.user.delete({
+            where: { id },
         });
     }
 };

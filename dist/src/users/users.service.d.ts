@@ -1,6 +1,6 @@
-import { Role } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { CreateUserInput } from './dto/create-user.dto';
+import { UpdateUserInput } from './dto/update-user.dto';
 export declare class UsersService {
     private readonly users;
     constructor(users: UsersRepository);
@@ -29,10 +29,7 @@ export declare class UsersService {
         saleAccId: string | null;
         createdAt: Date;
     }>;
-    update(id: string, input: {
-        role: Role;
-        saleAccId?: string | null;
-    }): Promise<{
+    update(id: string, input: UpdateUserInput): Promise<{
         id: string;
         email: string;
         name: string;
@@ -40,5 +37,8 @@ export declare class UsersService {
         saleAccId: string | null;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    remove(id: string, requesterId: string): Promise<{
+        ok: true;
     }>;
 }

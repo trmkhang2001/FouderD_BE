@@ -23,6 +23,7 @@ const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const users_service_1 = require("./users.service");
 const swagger_1 = require("@nestjs/swagger");
+const current_user_decorator_1 = require("../common/decorators/current-user.decorator");
 let UsersController = class UsersController {
     users;
     constructor(users) {
@@ -39,6 +40,9 @@ let UsersController = class UsersController {
     }
     update(id, body) {
         return this.users.update(id, body);
+    }
+    remove(id, user) {
+        return this.users.remove(id, user.sub);
     }
 };
 exports.UsersController = UsersController;
@@ -76,6 +80,15 @@ __decorate([
     __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "remove", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     (0, swagger_1.ApiTags)('users'),
