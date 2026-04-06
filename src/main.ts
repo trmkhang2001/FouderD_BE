@@ -39,6 +39,15 @@ async function bootstrap() {
   app.enableCors({
     origin: config.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:3000',
     credentials: true,
+    /** Bắt buộc cho trình duyệt gọi DELETE / PUT cross-origin (HTTPS domain khác port/subdomain). */
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'X-Requested-With',
+      'Cookie',
+    ],
   });
 
   const swaggerConfig = new DocumentBuilder()

@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { CreateUserInput } from './dto/create-user.dto';
 import { UpdateUserInput } from './dto/update-user.dto';
 export declare class UsersService {
     private readonly users;
     constructor(users: UsersRepository);
-    list(): import("@prisma/client").Prisma.PrismaPromise<{
+    list(): Prisma.PrismaPromise<{
         id: string;
         email: string;
         name: string;

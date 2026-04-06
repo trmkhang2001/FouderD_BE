@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { CreateUserInput } from './dto/create-user.dto';
 import { UpdateUserInput } from './dto/update-user.dto';
@@ -99,7 +99,18 @@ export class UsersService {
     if (!existing) {
       throw new NotFoundException();
     }
-    await this.users.deleteById(id);
+    try {
+      await this.users.deleteById(id);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === 'P2003') {
+          throw new ConflictException(
+            'Không xóa được: còn ràng buộc dữ liệu (DB). Chạy prisma migrate deploy trên VPS hoặc xóa dữ liệu liên quan trước.',
+          );
+        }
+      }
+      throw e;
+    }
     return { ok: true as const };
   }
 }

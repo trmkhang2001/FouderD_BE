@@ -39,6 +39,14 @@ async function bootstrap() {
     app.enableCors({
         origin: config.get('FRONTEND_ORIGIN') ?? 'http://localhost:3000',
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'Accept',
+            'X-Requested-With',
+            'Cookie',
+        ],
     });
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('ERP Pro API')

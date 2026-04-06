@@ -45,6 +45,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const bcrypt = __importStar(require("bcrypt"));
+const client_1 = require("@prisma/client");
 const users_repository_1 = require("./users.repository");
 let UsersService = class UsersService {
     users;
@@ -125,7 +126,17 @@ let UsersService = class UsersService {
         if (!existing) {
             throw new common_1.NotFoundException();
         }
-        await this.users.deleteById(id);
+        try {
+            await this.users.deleteById(id);
+        }
+        catch (e) {
+            if (e instanceof client_1.Prisma.PrismaClientKnownRequestError) {
+                if (e.code === 'P2003') {
+                    throw new common_1.ConflictException('Không xóa được: còn ràng buộc dữ liệu (DB). Chạy prisma migrate deploy trên VPS hoặc xóa dữ liệu liên quan trước.');
+                }
+            }
+            throw e;
+        }
         return { ok: true };
     }
 };
