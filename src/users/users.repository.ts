@@ -63,14 +63,25 @@ export class UsersRepository {
     id: string,
     data: {
       role: Role;
-      saleAccId?: string | null;
+      email: string;
+      name: string;
+      saleAccId: string | null;
+      password?: string;
     },
   ) {
     return this.prisma.user.update({
       where: { id },
       data: {
         role: data.role,
-        saleAccId: data.saleAccId ?? null,
+        email: data.email,
+        name: data.name,
+        saleAccId: data.saleAccId,
+        ...(data.password
+          ? {
+              password: data.password,
+              tokenVersion: { increment: 1 },
+            }
+          : {}),
       },
       select: {
         id: true,

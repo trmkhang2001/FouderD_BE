@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -7,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { CreateUserInput } from './dto/create-user.dto';
+import { UpdateUserInput } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -46,15 +48,46 @@ export class UsersService {
     };
   }
 
-  async update(id: string, input: { role: Role; saleAccId?: string | null }) {
+  async update(id: string, input: UpdateUserInput) {
     const existing = await this.users.findById(id);
     if (!existing) {
       throw new NotFoundException();
     }
 
+    let saleAccId: string | null = existing.saleAccId;
+    if (existing.saleAccId) {
+      if (
+        input.saleAccId !== undefined &&
+        input.saleAccId !== null &&
+        input.saleAccId !== existing.saleAccId
+      ) {
+        throw new BadRequestException(
+          'Sale ACC ID đã được gán, không thể thay đổi.',
+        );
+      }
+    } else {
+      saleAccId = input.saleAccId ?? null;
+    }
+
+    if (input.email !== existing.email) {
+      const taken = await this.users.findByEmail(input.email);
+      if (taken && taken.id !== id) {
+        throw new ConflictException('Email already registered');
+      }
+    }
+
+    const passwordPlain = input.password?.trim();
+    let passwordHash: string | undefined;
+    if (passwordPlain) {
+      passwordHash = await bcrypt.hash(passwordPlain, 12);
+    }
+
     return this.users.update(id, {
-      role: input.role,
-      saleAccId: input.saleAccId ?? null,
+      role: input.role as Role,
+      email: input.email,
+      name: input.name,
+      saleAccId,
+      ...(passwordHash && { password: passwordHash }),
     });
   }
 }

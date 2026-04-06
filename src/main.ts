@@ -26,6 +26,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/swagger', app, document);
 
   const port = config.get<number>('PORT') ?? 4000;
-  await app.listen(port);
+  // Ràng buộc IPv4 để nginx proxy_pass http://127.0.0.1:4000 luôn kết nối được trên VPS
+  await app.listen(port, '0.0.0.0');
 }
 bootstrap();

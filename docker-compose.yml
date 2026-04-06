@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: erp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/erp?schema=public
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      LADIWORK_WEBHOOK_SECRET: ${LADIWORK_WEBHOOK_SECRET}
+      SEPAY_WEBHOOK_SECRET: ${SEPAY_WEBHOOK_SECRET}
+      LADIPAGE_WEBHOOK_SECRET: ${LADIPAGE_WEBHOOK_SECRET}
+      MARKETING_COSTS_WEBHOOK_SECRET: ${MARKETING_COSTS_WEBHOOK_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
